@@ -2,8 +2,9 @@ package sistemabiblioteca;
 
 import java.io.*;
 import java.util.Scanner;
+import java.util.InputMismatchException; // Importado para validaciones avanzadas
 
-// Clase para manejar los datos del libro
+// Clase base para estructurar los datos de los libros
 class Libro {
     String codigo, titulo, autor, estado;
 
@@ -11,11 +12,11 @@ class Libro {
         this.codigo = codigo;
         this.titulo = titulo;
         this.autor = autor;
-        this.estado = estado; // 'disponible' o 'prestado'
+        this.estado = estado; 
     }
 }
 
-// Clase para manejar los datos del préstamo
+// Clase base para estructurar el registro de prestamos
 class Prestamo {
     String id, codLibro, estudiante, fechaPrestamo, fechaDevolucion;
 
@@ -24,12 +25,12 @@ class Prestamo {
         this.codLibro = codLibro;
         this.estudiante = estudiante;
         this.fechaPrestamo = fechaPrestamo;
-        this.fechaDevolucion = fechaDevolucion; // Puede estar vacía inicialmente
+        this.fechaDevolucion = fechaDevolucion; 
     }
 }
 
 public class SistemaBiblioteca {
-    // Arreglos solicitados en la rúbrica
+    // Declaracion de arreglos como exige la rúbrica
     static Libro[] libros = new Libro[100];
     static Prestamo[] prestamos = new Prestamo[100];
     static int totalLibros = 0;
@@ -37,65 +38,81 @@ public class SistemaBiblioteca {
     static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        cargarDatos(); // Carga la información de los .txt al iniciar
+        cargarDatos(); // Carga de persistencia al iniciar el sistema
 
-        int opcion;
+        int opcion = -1;
         do {
-            System.out.println("\n--- SISTEMA DE GESTION DE BIBLIOTECA ---");
+            System.out.println("\n=========================================");
+            System.out.println("   SISTEMA DE GESTION DE BIBLIOTECA");
+            System.out.println("=========================================");
             System.out.println("1. Registrar nuevo libro");
             System.out.println("2. Registrar prestamo");
             System.out.println("3. Registrar devolucion");
-            System.out.println("4. Mostrar libros registrados");
-            System.out.println("5. Guardar y Salir");
+            System.out.println("4. Mostrar inventario completo");
+            System.out.println("5. Reporte: Libros prestados actualmente"); // Reporte adicional
+            System.out.println("6. Guardar y Salir");
             System.out.print("Seleccione una opcion: ");
             
-            while (!scanner.hasNextInt()) {
-                System.out.println("Por favor ingrese un numero valido.");
-                scanner.next();
+            // VALIDACIÓN AVANZADA: Prevenir colapso por entrada de texto en lugar de números
+            try {
+                opcion = scanner.nextInt();
+                scanner.nextLine(); // Limpiar el buffer
+            } catch (InputMismatchException e) {
+                System.out.println("\n[ERROR CRITICO] Debe ingresar un número entero valido.");
+                scanner.nextLine(); // Limpiar la entrada incorrecta
+                continue; // Reiniciar el ciclo
             }
-            opcion = scanner.nextInt();
-            scanner.nextLine(); // Limpiar el buffer
 
             switch (opcion) {
                 case 1: registrarLibro(); break;
                 case 2: registrarPrestamo(); break;
                 case 3: registrarDevolucion(); break;
                 case 4: mostrarLibros(); break;
-                case 5: guardarDatos(); break;
-                default: System.out.println("Opcion invalida. Intente de nuevo.");
+                case 5: mostrarReportePrestados(); break;
+                case 6: guardarDatos(); break;
+                default: System.out.println("\n[AVISO] Opcion invalida. Intente de nuevo con un numero del 1 al 6.");
             }
-        } while (opcion != 5);
+        } while (opcion != 6);
     }
 
     static void registrarLibro() {
         if (totalLibros >= 100) {
-            System.out.println("Limite de libros alcanzado.");
+            System.out.println("\n[AVISO] Limite de capacidad del inventario alcanzado.");
             return;
         }
-        System.out.print("Ingrese codigo del libro: ");
+        System.out.println("\n--- REGISTRO DE LIBRO ---");
+        System.out.print("Ingrese codigo del libro (Ej. LIB01): ");
         String codigo = scanner.nextLine();
-        System.out.print("Ingrese titulo: ");
+        
+        // Validación para no duplicar códigos
+        if (buscarLibro(codigo) != -1) {
+            System.out.println("[ERROR] Ya existe un libro con ese codigo.");
+            return;
+        }
+
+        System.out.print("Ingrese título: ");
         String titulo = scanner.nextLine();
         System.out.print("Ingrese autor: ");
         String autor = scanner.nextLine();
 
         libros[totalLibros] = new Libro(codigo, titulo, autor, "disponible");
         totalLibros++;
-        System.out.println("Libro registrado con exito");
+        System.out.println("\n[ÉXITO] ¡Libro registrado correctamente!");
     }
 
     static void registrarPrestamo() {
+        System.out.println("\n--- REGISTRO DE PRESTAMO ---");
         System.out.print("Ingrese el codigo del libro a prestar: ");
         String codigo = scanner.nextLine();
 
         int indexLibro = buscarLibro(codigo);
         if (indexLibro == -1) {
-            System.out.println("Error: El libro no existe.");
+            System.out.println("[ERROR] El libro no existe en el inventario.");
             return;
         }
 
         if (libros[indexLibro].estado.equals("prestado")) {
-            System.out.println("Error: El libro ya se encuentra prestado.");
+            System.out.println("[ERROR] El libro ya se encuentra prestado actualmente.");
             return;
         }
 
@@ -106,65 +123,92 @@ public class SistemaBiblioteca {
         System.out.print("Ingrese fecha de prestamo (DD/MM/AAAA): ");
         String fechaP = scanner.nextLine();
 
-        // Cambiar estado del libro
+        // Actualización de estado en el arreglo de libros
         libros[indexLibro].estado = "prestado";
         
-        // Registrar préstamo
+        // Inserción en el arreglo de préstamos
         prestamos[totalPrestamos] = new Prestamo(id, codigo, estudiante, fechaP, "Pendiente");
         totalPrestamos++;
         
-        System.out.println("Prestamo registrado con exito");
+        System.out.println("\n[EXITO] ¡Prestamo registrado y estado del libro actualizado!");
     }
 
     static void registrarDevolucion() {
+        System.out.println("\n--- REGISTRO DE DEVOLUCIÓN ---");
         System.out.print("Ingrese el codigo del libro a devolver: ");
         String codigo = scanner.nextLine();
 
         int indexLibro = buscarLibro(codigo);
         if (indexLibro == -1) {
-            System.out.println("Error: El libro no existe.");
+            System.out.println("[ERROR] El libro no existe en el sistema.");
             return;
         }
 
         if (libros[indexLibro].estado.equals("disponible")) {
-            System.out.println("El libro ya consta como disponible en el sistema.");
+            System.out.println("[AVISO] El libro ya consta como disponible en los registros.");
             return;
         }
 
-        System.out.print("Ingrese fecha de devolución (DD/MM/AAAA): ");
+        System.out.print("Ingrese fecha de devolucion (DD/MM/AAAA): ");
         String fechaD = scanner.nextLine();
 
-        // Actualizar el estado del libro
         libros[indexLibro].estado = "disponible";
 
-        // Buscar el préstamo correspondiente y actualizar la fecha de devolución
         for (int i = 0; i < totalPrestamos; i++) {
             if (prestamos[i].codLibro.equals(codigo) && prestamos[i].fechaDevolucion.equals("Pendiente")) {
                 prestamos[i].fechaDevolucion = fechaD;
                 break;
             }
         }
-        System.out.println("Devolucion registrada con exito");
+        System.out.println("\n[EXITO] ¡Devolucion procesada y libro nuevamente disponible!");
     }
 
     static void mostrarLibros() {
-        System.out.println("\n--- LISTADO DE LIBROS ---");
+        System.out.println("\n--- INVENTARIO COMPLETO ---");
+        if (totalLibros == 0) {
+            System.out.println("No hay libros registrados aun.");
+            return;
+        }
+        // Formato tabular básico
+        System.out.printf("%-10s | %-25s | %-15s | %-15s\n", "CODIGO", "TITULO", "AUTOR", "ESTADO");
+        System.out.println("-----------------------------------------------------------------------");
         for (int i = 0; i < totalLibros; i++) {
-            System.out.println(libros[i].codigo + " | " + libros[i].titulo + " | " + libros[i].estado);
+            System.out.printf("%-10s | %-25s | %-15s | %-15s\n", libros[i].codigo, libros[i].titulo, libros[i].autor, libros[i].estado);
         }
     }
 
-    // Método auxiliar para encontrar la posición de un libro en el arreglo
-    static int buscarLibro(String codigo) {
-        for (int i = 0; i < totalLibros; i++) {
-            if (libros[i].codigo.equals(codigo)) {
-                return i;
+    // FUNCIONALIDAD EXTRA: Reporte filtrado
+    static void mostrarReportePrestados() {
+        System.out.println("\n--- REPORTE: LIBROS PRESTADOS ---");
+        boolean hayPrestados = false;
+        System.out.printf("%-10s | %-25s | %-20s\n", "CODIGO", "TITULO", "ESTUDIANTE (ID)");
+        System.out.println("---------------------------------------------------------------");
+        for (int i = 0; i < totalPrestamos; i++) {
+            if (prestamos[i].fechaDevolucion.equals("Pendiente")) {
+                // Busca el título del libro correspondiente
+                String titulo = "";
+                int idx = buscarLibro(prestamos[i].codLibro);
+                if (idx != -1) titulo = libros[idx].titulo;
+                
+                System.out.printf("%-10s | %-25s | %-20s\n", prestamos[i].codLibro, titulo, prestamos[i].estudiante + " (" + prestamos[i].id + ")");
+                hayPrestados = true;
             }
         }
-        return -1; // No encontrado
+        if (!hayPrestados) {
+            System.out.println("Actualmente no hay ningun libro en calidad de prestamo.");
+        }
     }
 
-    // --- PERSISTENCIA DE DATOS ---
+    static int buscarLibro(String codigo) {
+        for (int i = 0; i < totalLibros; i++) {
+            if (libros[i].codigo.equalsIgnoreCase(codigo)) {
+                return i; // Retorna el índice si lo encuentra
+            }
+        }
+        return -1; // Retorna -1 si no existe
+    }
+
+    // MÉTODOS DE PERSISTENCIA MEDIANTE ESCRITURA Y LECTURA DE ARCHIVOS
     static void guardarDatos() {
         try {
             BufferedWriter bwLibros = new BufferedWriter(new FileWriter("libros.txt"));
@@ -179,9 +223,9 @@ public class SistemaBiblioteca {
             }
             bwPrestamos.close();
             
-            System.out.println("Datos guardados en archivos .txt exitosamente. ¡Hasta pronto!");
+            System.out.println("\n[SISTEMA] Datos guardados en archivos .txt exitosamente. ¡Hasta pronto!");
         } catch (IOException e) {
-            System.out.println("Error al guardar los archivos: " + e.getMessage());
+            System.out.println("\n[ERROR CRITICO] Fallo al guardar los archivos: " + e.getMessage());
         }
     }
 
@@ -215,7 +259,7 @@ public class SistemaBiblioteca {
                 brPrestamos.close();
             }
         } catch (IOException e) {
-            System.out.println("No se pudieron cargar los datos previos o los archivos no existen aún.");
+            System.out.println("\n[AVISO] No se encontraron registros previos. Se iniciara un inventario en blanco.");
         }
     }
 }

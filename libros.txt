@@ -1,2 +1,10 @@
-L001,Cien años de soledad,Gabriel García Márquez,disponible
-L002,Don Quijote de la Mancha,Miguel de Cervantes,disponible
+LIB001,Estructuras de Datos,Joyanes Aguilar,disponible
+LIB002,Java a Fondo,Pablo Sznajdleder,prestado
+LIB003,Clean Code,Robert C. Martin,prestado
+LIB004,Redes de Computadoras,Andrew Tanenbaum,disponible
+LIB005,Sistemas Operativos,William Stallings,prestado
+LIB006,Inteligencia Artificial,Stuart Russell,disponible
+LIB007,Bases de Datos,Ramez Elmasri,prestado
+LIB008,Ingenieria de Software,Ian Sommerville,disponible
+LIB009,Patrones de Diseño,Erich Gamma,prestado
+LIB010,Marketing Digital,Philip Kotler,disponible
