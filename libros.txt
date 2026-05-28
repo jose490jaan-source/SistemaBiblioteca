@@ -6,5 +6,6 @@ LIB005,Sistemas Operativos,William Stallings,prestado
 LIB006,Inteligencia Artificial,Stuart Russell,disponible
 LIB007,Bases de Datos,Ramez Elmasri,prestado
 LIB008,Ingenieria de Software,Ian Sommerville,disponible
-LIB009,Patrones de Diseño,Erich Gamma,prestado
+LIB009,Patrones de Diseno,Erich Gamma,prestado
 LIB010,Marketing Digital,Philip Kotler,disponible
+LIB011,Don Quijote de la Mancha,Miguel de Cervantes,disponible
